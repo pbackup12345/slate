@@ -2,7 +2,7 @@
   "name": "@pbackup12345/slate-hyperscript",
   "type": "module",
   "description": "A hyperscript helper for creating Slate documents.",
-  "version": "0.13.10",
+  "version": "0.13.11",
   "license": "MIT",
   "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",

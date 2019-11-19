@@ -5,7 +5,7 @@
     "access": "public"
   },
   "description": "A completely customizable framework for building rich text editors.",
-  "version": "0.50.4",
+  "version": "0.50.5",
   "license": "MIT",
   "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",

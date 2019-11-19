@@ -21,10 +21,10 @@
     "is-plain-object": "^2.0.4"
   },
   "devDependencies": {
-    "pbackup12345/slate": "^0.47.8"
+    "pbackup12345/slate/packages/slate#next": "^0.47.8"
   },
   "peerDependencies": {
-    "pbackup12345/slate": ">=0.50.0"
+    "pbackup12345/slate/packages/slate#next": ">=0.50.0"
   },
   "umdGlobals": {
     "slate": "Slate"

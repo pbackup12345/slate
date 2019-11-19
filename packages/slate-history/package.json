@@ -19,8 +19,8 @@
     "is-plain-object": "^2.0.4"
   },
   "devDependencies": {
-    "slate": "^0.47.8",
-    "slate-hyperscript": "^0.13.8"
+    "@pbackup/slate": "^0.50.0",
+    "@pbackup/slate-hyperscript": "^0.13.8"
   },
   "peerDependencies": {
     "slate": ">=0.50.0"
@@ -38,5 +38,5 @@
     "stack",
     "undo"
   ],
-  "gitHead": "a7edefa1345f1092d5ae3b79a0e3bc9c8aafca09"
+  "gitHead": "62cf53af1f214aeadfc960cd2e674fe84611e5ca"
 }

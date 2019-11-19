@@ -18,11 +18,11 @@
     "lib/"
   ],
   "devDependencies": {
-    "slate": "^0.47.8",
-    "slate-hyperscript": "^0.13.8"
+    "pbackup12345/slate": "^0.47.8",
+    "pbackup12345/slate-hyperscript": "^0.13.8"
   },
   "peerDependencies": {
-    "slate": ">=0.50.0"
+    "pbackup12345/slate": ">=0.50.0"
   },
   "umdGlobals": {
     "slate": "Slate"

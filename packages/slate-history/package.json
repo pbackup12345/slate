@@ -22,11 +22,11 @@
     "is-plain-object": "^2.0.4"
   },
   "devDependencies": {
-    "@pbackup/slate": "^0.50.0",
-    "@pbackup/slate-hyperscript": "^0.13.8"
+    "pbackup/slate": "^0.50.0",
+    "pbackup/slate-hyperscript": "^0.13.8"
   },
   "peerDependencies": {
-    "slate": ">=0.50.0"
+    "pbackup/slate": ">=0.50.0"
   },
   "umdGlobals": {
     "slate": "Slate"

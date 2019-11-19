@@ -1,5 +1,5 @@
 {
-  "name": "@pbackup12345/slate-history",
+  "name": "@pbackup/slate-history",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -22,11 +22,11 @@
     "is-plain-object": "^2.0.4"
   },
   "devDependencies": {
-    "pbackup/slate/packages/slate#next": "^0.50.0",
-    "pbackup/slate/packages/slate-hyperscript#next": "^0.13.8"
+    "@pbackup/slate": "^0.50.0",
+    "@pbackup/slate-hyperscript": "^0.13.8"
   },
   "peerDependencies": {
-    "pbackup/slate/packages/slate#next": ">=0.50.0"
+    "@pbackup/slate": ">=0.50.0"
   },
   "umdGlobals": {
     "slate": "Slate"

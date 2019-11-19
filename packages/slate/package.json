@@ -1,5 +1,5 @@
 {
-  "name": "@pbackup12345/slate",
+  "name": "@pbackup/slate",
   "type": "module",
   "publishConfig": {
     "access": "public"

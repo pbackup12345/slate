@@ -1,5 +1,5 @@
 {
-  "name": "@pbackup12345/slate-react",
+  "name": "@pbackup/slate-react",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -30,13 +30,13 @@
     "scroll-into-view-if-needed": "^2.2.20"
   },
   "devDependencies": {
-    "pbackup12345/slate/packages/slate#next": "^0.47.8",
-    "pbackup12345/slate/packages/slate-hyperscript#next": "^0.13.8"
+    "@pbackup/slate": "^0.47.8",
+    "@pbackup/slate-hyperscript": "^0.13.8"
   },
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0",
-    "pbackup12345/slate/packages/slate#next": ">=0.50.0"
+    "@pbackup/slate": ">=0.50.0"
   },
   "umdGlobals": {
     "react": "React",

@@ -2,7 +2,7 @@
   "name": "@pbackup12345/slate-schema",
   "type": "module",
   "description": "A mixin for ensuring your Slate content conforms to a set of rules.",
-  "version": "0.50.3",
+  "version": "0.50.4",
   "license": "MIT",
   "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",

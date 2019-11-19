@@ -1,11 +1,11 @@
 {
   "name": "@pbackup12345/slate-history",
   "type": "module",
-   "publishConfig": {
+  "publishConfig": {
     "access": "public"
   },
   "description": "An operation-based history implementation for Slate editors.",
-  "version": "0.50.3",
+  "version": "0.50.4",
   "license": "MIT",
   "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",

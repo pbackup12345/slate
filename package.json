@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "name": "@pbackup12345/slate-packages",
   "type": "module",
   "workspaces": [
@@ -78,10 +78,10 @@
     "rollup-plugin-replace": "^2.2.0",
     "rollup-plugin-typescript2": "^0.24.3",
     "rollup-plugin-uglify": "^6.0.3",
-    "slate": "^0.47.8",
-    "slate-history": "^0.47.8",
-    "slate-hyperscript": "^0.13.8",
-    "slate-react": "^0.22.9",
+    "@pbackup/slate": "^0.50.0",
+    "@pbackup/slate-history": "^0.50.0",
+    "@pbackup/slate-hyperscript": "^0.50.0",
+    "@pbackup/slate-react": "^0.50.0",
     "typescript": "^3.6.4"
   }
 }

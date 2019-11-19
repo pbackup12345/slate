@@ -1,10 +1,10 @@
 {
-  "name": "slate-react",
+  "name": "@pbackup12345/slate-react",
   "type": "module",
   "description": "Tools for building completely customizable rich-text editors with React.",
   "version": "0.22.9",
   "license": "MIT",
-  "repository": "git://github.com/ianstormtaylor/slate.git",
+  "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",
   "module": "lib/index.es.js",
   "types": "lib/index.d.ts",

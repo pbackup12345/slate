@@ -1,10 +1,10 @@
 {
-  "name": "slate",
+  "name": "@pbackup12345/slate",
   "type": "module",
   "description": "A completely customizable framework for building rich text editors.",
-  "version": "0.47.8",
+  "version": "0.50.0",
   "license": "MIT",
-  "repository": "git://github.com/ianstormtaylor/slate.git",
+  "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",
   "module": "lib/index.es.js",
   "types": "lib/index.d.ts",

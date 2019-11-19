@@ -98,10 +98,6 @@ function configure(pkg, env, target, { ts }) {
 
     // Register Node.js globals for browserify compatibility.
     globals(),
-
-    // Only minify the output in production, since it is very slow. And only
-    // for UMD builds, since modules will be bundled by the consumer.
-    isUmd && isProd && uglify(),
   ].filter(Boolean)
 
   if (isUmd) {

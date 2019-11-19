@@ -1,12 +1,8 @@
-import React from 'react'
-import { Text, Path, Element, Node } from 'slate'
+import React from 'react';
+import { Element, Node, Path, Text } from 'slate';
 
-import { useEditor } from '../hooks/use-editor'
-import { Leaf } from '../utils/leaf'
-
-/**
- * Leaf content strings.
- */
+import { useEditor } from '../hooks/use-editor';
+import { Leaf } from '../utils/leaf';
 
 const String = (props: {
   isLast: boolean

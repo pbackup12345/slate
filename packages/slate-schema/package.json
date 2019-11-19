@@ -1,5 +1,5 @@
 {
-  "name": "pbackup/slate-schema",
+  "name": "@pbackup/slate-schema",
   "type": "module",
   "publishConfig": {
     "access": "public"

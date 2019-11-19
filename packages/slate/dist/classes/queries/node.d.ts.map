@@ -1,0 +1,1 @@
+{"version":3,"file":"node.d.ts","sourceRoot":"","sources":["../../packages/slate/src/classes/queries/node.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,MAAM,EAGN,SAAS,EACT,SAAS,EAIV,MAAM,OAAO,CAAA;AAEd,cAAM,WAAW;IACf;;OAEG;IAEH,WAAW,CAAC,IAAI,EAAE,MAAM,EAAE,KAAK,EAAE,SAAS,EAAE,KAAK,EAAE,SAAS,GAAG,SAAS,EAAE;CA2C3E;AAED,eAAe,WAAW,CAAA"}

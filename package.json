@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "slate-packages",
+  "name": "@pbackup12345/slate-packages",
   "type": "module",
   "workspaces": [
     "packages/*"

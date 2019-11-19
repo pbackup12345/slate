@@ -8,7 +8,7 @@
   "plugins": ["-highlight", "prism", "github"],
   "pluginsConfig": {
     "github": {
-      "url": "https://github.com/ianstormtaylor/slate"
+      "url": "https://github.com/pbackup12345/slate"
     }
   }
 }

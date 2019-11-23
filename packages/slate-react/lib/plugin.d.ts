@@ -1,6 +1,6 @@
 import { Editor, Element as SlateElement, Node as SlateNode, Operation as SlateOperation, Path as SlatePath, Point as SlatePoint, Range as SlateRange, Value as SlateValue } from 'slate';
-import { Key } from './utils/key';
 import { DOMPoint } from './utils/dom';
+import { Key } from './utils/key';
 /**
  * `ReactEditor` is a Slate editor interface with the React mixin applied.
  */
@@ -52,23 +52,6 @@ export declare const withReact: (Editor: new (...args: any[]) => Editor) => {
          */
         insertData(dataTransfer: DataTransfer): void;
         /**
-         * Transform an `InputEvent` into commands on the editor.
-         */
-        onBeforeInput(event: Event & {
-            data: string | null;
-            dataTransfer: DataTransfer | null;
-            getTargetRanges(): StaticRange[];
-            inputType: string;
-            isComposing: boolean;
-        }): void;
-        /**
-         * Transform a `KeyboardEvent` into commands on the editor. This should only
-         * be used for hotkeys which attach specific commands to specific key
-         * combinations. Most input logic will be handled by the `onBeforeInput`
-         * method instead.
-         */
-        onKeyDown(event: KeyboardEvent): void;
-        /**
          * Redo.
          */
         redo(): void;
@@ -109,7 +92,7 @@ export declare const withReact: (Editor: new (...args: any[]) => Editor) => {
         /**
          * Find a Slate range from a DOM range or selection.
          */
-        toSlateRange(domRange: Selection | StaticRange | Range): SlateRange;
+        toSlateRange(domRange: Selection | Range | StaticRange): SlateRange;
         onChange: (value: SlateValue, operations: SlateOperation[]) => void;
         operations: SlateOperation[];
         value: SlateValue;
@@ -195,6 +178,9 @@ export declare const withReact: (Editor: new (...args: any[]) => Editor) => {
         } | undefined): void;
         toggleMarks(this: Editor, marks: import("slate").Mark[], options?: {
             at?: SlatePath | SlatePoint | SlateRange | undefined;
+            /**
+             * `ReactEditor` is a Slate editor interface with the React mixin applied.
+             */
             hanging?: boolean | undefined;
         } | undefined): void;
         collapse(this: Editor, options?: {
@@ -306,9 +292,6 @@ export declare const withReact: (Editor: new (...args: any[]) => Editor) => {
             reverse?: boolean | undefined;
         }): Iterable<import("slate").NodeEntry>;
         nodes(this: Editor, options?: {
-            /**
-             * Check if the editor is focused.
-             */
             at?: SlatePath | SlatePoint | SlateRange | import("slate/lib/interfaces/location").Span | undefined;
             reverse?: boolean | undefined;
         } | undefined): Iterable<import("slate").NodeEntry>;

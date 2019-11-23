@@ -312,6 +312,720 @@
     return defaultBehavior(compute(target, computeOptions), computeOptions.behavior);
   }
 
+  /**
+   * A React context for sharing the `ReactEditor` class.
+   */
+
+  var EditorContext = React.createContext(undefined);
+  /**
+   * Get the current `ReactEditor` class that the component lives under.
+   */
+
+  var useEditor = function useEditor() {
+    var editor = React.useContext(EditorContext);
+
+    if (!editor) {
+      throw new Error("The `useEditor` hook must be used inside the <Editor> context.");
+    }
+
+    return editor;
+  };
+
+  /**
+   * A React context for sharing the `focused` state of the editor.
+   */
+
+  var FocusedContext = React.createContext(false);
+  /**
+   * Get the current `focused` state of the editor.
+   */
+
+  var useFocused = function useFocused() {
+    return React.useContext(FocusedContext);
+  };
+
+  /**
+   * A React context for sharing the `readOnly` state of the editor.
+   */
+
+  var ReadOnlyContext = React.createContext(false);
+  /**
+   * Get the current `readOnly` state of the editor.
+   */
+
+  var useReadOnly = function useReadOnly() {
+    return React.useContext(ReadOnlyContext);
+  };
+
+  function _arrayWithHoles(arr) {
+    if (Array.isArray(arr)) return arr;
+  }
+
+  var arrayWithHoles = _arrayWithHoles;
+
+  function _iterableToArrayLimit(arr, i) {
+    if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
+      return;
+    }
+
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _e = undefined;
+
+    try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);
+
+        if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;
+      _e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"] != null) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+
+    return _arr;
+  }
+
+  var iterableToArrayLimit = _iterableToArrayLimit;
+
+  function _nonIterableRest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance");
+  }
+
+  var nonIterableRest = _nonIterableRest;
+
+  function _slicedToArray(arr, i) {
+    return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || nonIterableRest();
+  }
+
+  var slicedToArray = _slicedToArray;
+
+  /**
+   * Types.
+   */
+
+  /**
+   * Check if a DOM node is a comment node.
+   */
+  var isDOMComment = function isDOMComment(value) {
+    return isDOMNode(value) && value.nodeType === 8;
+  };
+  /**
+   * Check if a DOM node is an element node.
+   */
+
+  var isDOMElement = function isDOMElement(value) {
+    return isDOMNode(value) && value.nodeType === 1;
+  };
+  /**
+   * Check if a value is a DOM node.
+   */
+
+  var isDOMNode = function isDOMNode(value) {
+    return value instanceof Node;
+  };
+  /**
+   * Check if a DOM node is an element node.
+   */
+
+  var isDOMText = function isDOMText(value) {
+    return isDOMNode(value) && value.nodeType === 3;
+  };
+  /**
+   * Normalize a DOM point so that it always refers to a text node.
+   */
+
+  var normalizeDOMPoint = function normalizeDOMPoint(domPoint) {
+    var _domPoint = slicedToArray(domPoint, 2),
+        node = _domPoint[0],
+        offset = _domPoint[1]; // If it's an element node, its offset refers to the index of its children
+    // including comment nodes, so try to find the right text child node.
+
+
+    if (isDOMElement(node) && node.childNodes.length) {
+      var isLast = offset === node.childNodes.length;
+      var direction = isLast ? 'backward' : 'forward';
+      var index = isLast ? offset - 1 : offset;
+      node = getEditableChild(node, index, direction); // If the node has children, traverse until we have a leaf node. Leaf nodes
+      // can be either text nodes, or other void DOM nodes.
+
+      while (isDOMElement(node) && node.childNodes.length) {
+        var i = isLast ? node.childNodes.length - 1 : 0;
+        node = getEditableChild(node, i, direction);
+      } // Determine the new offset inside the text node.
+
+
+      offset = isLast && node.textContent != null ? node.textContent.length : 0;
+    } // Return the node and offset.
+
+
+    return [node, offset];
+  };
+  /**
+   * Get the nearest editable child at `index` in a `parent`, preferring
+   * `direction`.
+   */
+
+  var getEditableChild = function getEditableChild(parent, index, direction) {
+    var childNodes = parent.childNodes;
+    var child = childNodes[index];
+    var i = index;
+    var triedForward = false;
+    var triedBackward = false; // While the child is a comment node, or an element node with no children,
+    // keep iterating to find a sibling non-void, non-comment node.
+
+    while (isDOMComment(child) || isDOMElement(child) && child.childNodes.length === 0 || isDOMElement(child) && child.getAttribute('contenteditable') === 'false') {
+      if (triedForward && triedBackward) {
+        break;
+      }
+
+      if (i >= childNodes.length) {
+        triedForward = true;
+        i = index - 1;
+        direction = 'backward';
+        continue;
+      }
+
+      if (i < 0) {
+        triedBackward = true;
+        i = index + 1;
+        direction = 'forward';
+        continue;
+      }
+
+      child = childNodes[i];
+      i += direction === 'forward' ? 1 : -1;
+    }
+
+    return child;
+  };
+
+  var IS_IOS = typeof navigator !== 'undefined' && typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  var IS_APPLE = typeof navigator !== 'undefined' && /Mac OS X/.test(navigator.userAgent);
+  var IS_FIREFOX = typeof navigator !== 'undefined' && /^(?!.*Seamonkey)(?=.*Firefox).*/i.test(navigator.userAgent);
+  var IS_SAFARI = typeof navigator !== 'undefined' && /Version\/[\d\.]+.*Safari/.test(navigator.userAgent);
+
+  function unwrapExports (x) {
+  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+  }
+
+  function createCommonjsModule(fn, module) {
+  	return module = { exports: {} }, fn(module, module.exports), module.exports;
+  }
+
+  var lib = createCommonjsModule(function (module, exports) {
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  /**
+   * Constants.
+   */
+
+  var IS_MAC = typeof window != 'undefined' && /Mac|iPod|iPhone|iPad/.test(window.navigator.platform);
+
+  var MODIFIERS = {
+    alt: 'altKey',
+    control: 'ctrlKey',
+    meta: 'metaKey',
+    shift: 'shiftKey'
+  };
+
+  var ALIASES = {
+    add: '+',
+    break: 'pause',
+    cmd: 'meta',
+    command: 'meta',
+    ctl: 'control',
+    ctrl: 'control',
+    del: 'delete',
+    down: 'arrowdown',
+    esc: 'escape',
+    ins: 'insert',
+    left: 'arrowleft',
+    mod: IS_MAC ? 'meta' : 'control',
+    opt: 'alt',
+    option: 'alt',
+    return: 'enter',
+    right: 'arrowright',
+    space: ' ',
+    spacebar: ' ',
+    up: 'arrowup',
+    win: 'meta',
+    windows: 'meta'
+  };
+
+  var CODES = {
+    backspace: 8,
+    tab: 9,
+    enter: 13,
+    shift: 16,
+    control: 17,
+    alt: 18,
+    pause: 19,
+    capslock: 20,
+    escape: 27,
+    ' ': 32,
+    pageup: 33,
+    pagedown: 34,
+    end: 35,
+    home: 36,
+    arrowleft: 37,
+    arrowup: 38,
+    arrowright: 39,
+    arrowdown: 40,
+    insert: 45,
+    delete: 46,
+    meta: 91,
+    numlock: 144,
+    scrolllock: 145,
+    ';': 186,
+    '=': 187,
+    ',': 188,
+    '-': 189,
+    '.': 190,
+    '/': 191,
+    '`': 192,
+    '[': 219,
+    '\\': 220,
+    ']': 221,
+    '\'': 222
+  };
+
+  for (var f = 1; f < 20; f++) {
+    CODES['f' + f] = 111 + f;
+  }
+
+  /**
+   * Is hotkey?
+   */
+
+  function isHotkey(hotkey, options, event) {
+    if (options && !('byKey' in options)) {
+      event = options;
+      options = null;
+    }
+
+    if (!Array.isArray(hotkey)) {
+      hotkey = [hotkey];
+    }
+
+    var array = hotkey.map(function (string) {
+      return parseHotkey(string, options);
+    });
+    var check = function check(e) {
+      return array.some(function (object) {
+        return compareHotkey(object, e);
+      });
+    };
+    var ret = event == null ? check : check(event);
+    return ret;
+  }
+
+  function isCodeHotkey(hotkey, event) {
+    return isHotkey(hotkey, event);
+  }
+
+  function isKeyHotkey(hotkey, event) {
+    return isHotkey(hotkey, { byKey: true }, event);
+  }
+
+  /**
+   * Parse.
+   */
+
+  function parseHotkey(hotkey, options) {
+    var byKey = options && options.byKey;
+    var ret = {};
+
+    // Special case to handle the `+` key since we use it as a separator.
+    hotkey = hotkey.replace('++', '+add');
+    var values = hotkey.split('+');
+    var length = values.length;
+
+    // Ensure that all the modifiers are set to false unless the hotkey has them.
+
+    for (var k in MODIFIERS) {
+      ret[MODIFIERS[k]] = false;
+    }
+
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = values[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var value = _step.value;
+
+        var optional = value.endsWith('?');
+
+        if (optional) {
+          value = value.slice(0, -1);
+        }
+
+        var name = toKeyName(value);
+        var modifier = MODIFIERS[name];
+
+        if (length === 1 || !modifier) {
+          if (byKey) {
+            ret.key = name;
+          } else {
+            ret.which = toKeyCode(value);
+          }
+        }
+
+        if (modifier) {
+          ret[modifier] = optional ? null : true;
+        }
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+
+    return ret;
+  }
+
+  /**
+   * Compare.
+   */
+
+  function compareHotkey(object, event) {
+    for (var key in object) {
+      var expected = object[key];
+      var actual = void 0;
+
+      if (expected == null) {
+        continue;
+      }
+
+      if (key === 'key') {
+        actual = event.key.toLowerCase();
+      } else if (key === 'which') {
+        actual = expected === 91 && event.which === 93 ? 91 : event.which;
+      } else {
+        actual = event[key];
+      }
+
+      if (actual == null && expected === false) {
+        continue;
+      }
+
+      if (actual !== expected) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Utils.
+   */
+
+  function toKeyCode(name) {
+    name = toKeyName(name);
+    var code = CODES[name] || name.toUpperCase().charCodeAt(0);
+    return code;
+  }
+
+  function toKeyName(name) {
+    name = name.toLowerCase();
+    name = ALIASES[name] || name;
+    return name;
+  }
+
+  /**
+   * Export.
+   */
+
+  exports.default = isHotkey;
+  exports.isHotkey = isHotkey;
+  exports.isCodeHotkey = isCodeHotkey;
+  exports.isKeyHotkey = isKeyHotkey;
+  exports.parseHotkey = parseHotkey;
+  exports.compareHotkey = compareHotkey;
+  exports.toKeyCode = toKeyCode;
+  exports.toKeyName = toKeyName;
+  });
+
+  unwrapExports(lib);
+  var lib_1 = lib.isHotkey;
+  var lib_2 = lib.isCodeHotkey;
+  var lib_3 = lib.isKeyHotkey;
+  var lib_4 = lib.parseHotkey;
+  var lib_5 = lib.compareHotkey;
+  var lib_6 = lib.toKeyCode;
+  var lib_7 = lib.toKeyName;
+
+  /**
+   * Hotkey mappings for each platform.
+   */
+
+  var HOTKEYS = {
+    bold: 'mod+b',
+    compose: ['down', 'left', 'right', 'up', 'backspace', 'enter'],
+    moveBackward: 'left',
+    moveForward: 'right',
+    moveWordBackward: 'ctrl+left',
+    moveWordForward: 'ctrl+right',
+    deleteBackward: 'shift?+backspace',
+    deleteForward: 'shift?+delete',
+    extendBackward: 'shift+left',
+    extendForward: 'shift+right',
+    italic: 'mod+i',
+    splitBlock: 'shift?+enter',
+    undo: 'mod+z'
+  };
+  var APPLE_HOTKEYS = {
+    moveLineBackward: 'opt+up',
+    moveLineForward: 'opt+down',
+    moveWordBackward: 'opt+left',
+    moveWordForward: 'opt+right',
+    deleteBackward: ['ctrl+backspace', 'ctrl+h'],
+    deleteForward: ['ctrl+delete', 'ctrl+d'],
+    deleteLineBackward: 'cmd+shift?+backspace',
+    deleteLineForward: ['cmd+shift?+delete', 'ctrl+k'],
+    deleteWordBackward: 'opt+shift?+backspace',
+    deleteWordForward: 'opt+shift?+delete',
+    extendLineBackward: 'opt+shift+up',
+    extendLineForward: 'opt+shift+down',
+    redo: 'cmd+shift+z',
+    transposeCharacter: 'ctrl+t'
+  };
+  var WINDOWS_HOTKEYS = {
+    deleteWordBackward: 'ctrl+shift?+backspace',
+    deleteWordForward: 'ctrl+shift?+delete',
+    redo: ['ctrl+y', 'ctrl+shift+z']
+  };
+  /**
+   * Create a platform-aware hotkey checker.
+   */
+
+  var create = function create(key) {
+    var generic = HOTKEYS[key];
+    var apple = APPLE_HOTKEYS[key];
+    var windows = WINDOWS_HOTKEYS[key];
+    var isGeneric = generic && lib_3(generic);
+    var isApple = apple && lib_3(apple);
+    var isWindows = windows && lib_3(windows);
+    return function (event) {
+      if (isGeneric && isGeneric(event)) return true;
+      if (IS_APPLE && isApple && isApple(event)) return true;
+      if (!IS_APPLE && isWindows && isWindows(event)) return true;
+      return false;
+    };
+  };
+  /**
+   * Hotkeys.
+   */
+
+
+  var Hotkeys = {
+    isBold: create('bold'),
+    isCompose: create('compose'),
+    isMoveBackward: create('moveBackward'),
+    isMoveForward: create('moveForward'),
+    isDeleteBackward: create('deleteBackward'),
+    isDeleteForward: create('deleteForward'),
+    isDeleteLineBackward: create('deleteLineBackward'),
+    isDeleteLineForward: create('deleteLineForward'),
+    isDeleteWordBackward: create('deleteWordBackward'),
+    isDeleteWordForward: create('deleteWordForward'),
+    isExtendBackward: create('extendBackward'),
+    isExtendForward: create('extendForward'),
+    isExtendLineBackward: create('extendLineBackward'),
+    isExtendLineForward: create('extendLineForward'),
+    isItalic: create('italic'),
+    isMoveLineBackward: create('moveLineBackward'),
+    isMoveLineForward: create('moveLineForward'),
+    isMoveWordBackward: create('moveWordBackward'),
+    isMoveWordForward: create('moveWordForward'),
+    isRedo: create('redo'),
+    isSplitBlock: create('splitBlock'),
+    isTransposeCharacter: create('transposeCharacter'),
+    isUndo: create('undo')
+  };
+
+  var Utils;
+
+  (function (Utils) {
+    /**
+     * Get the fragment data from a `DataTransfer` object.
+     */
+    Utils.getFragmentData = function (dataTransfer) {
+      var base64 = dataTransfer.getData('application/x-slate-fragment');
+
+      if (base64) {
+        var decoded = decodeURIComponent(window.atob(base64));
+        var fragment = JSON.parse(decoded);
+        return fragment;
+      }
+    };
+    /**
+     * Set the currently selected fragment to the clipboard.
+     */
+
+
+    Utils.setFragmentData = function (dataTransfer, editor) {
+      var value = editor.value;
+      var selection = value.selection;
+
+      if (!selection) {
+        return;
+      }
+
+      var _SlateRange$edges = slate.Range.edges(selection),
+          _SlateRange$edges2 = slicedToArray(_SlateRange$edges, 2),
+          start = _SlateRange$edges2[0],
+          end = _SlateRange$edges2[1];
+
+      var startVoid = editor.getMatch(start.path, 'void');
+      var endVoid = editor.getMatch(end.path, 'void');
+
+      if (slate.Range.isCollapsed(selection) && !startVoid) {
+        return;
+      } // Create a fake selection so that we can add a Base64-encoded copy of the
+      // fragment to the HTML, to decode on future pastes.
+
+
+      var domRange = editor.toDomRange(selection);
+      var contents = domRange.cloneContents();
+      var attach = contents.childNodes[0]; // Make sure attach is non-empty, since empty nodes will not get copied.
+
+      contents.childNodes.forEach(function (node) {
+        if (node.textContent && node.textContent.trim() !== '') {
+          attach = node;
+        }
+      }); // COMPAT: If the end node is a void node, we need to move the end of the
+      // range from the void node's spacer span, to the end of the void node's
+      // content, since the spacer is before void's content in the DOM.
+
+      if (endVoid) {
+        var _endVoid = slicedToArray(endVoid, 1),
+            voidNode = _endVoid[0];
+
+        var r = domRange.cloneRange();
+        var domNode = editor.toDomNode(voidNode);
+        r.setEndAfter(domNode);
+        contents = r.cloneContents();
+      } // COMPAT: If the start node is a void node, we need to attach the encoded
+      // fragment to the void node's content node instead of the spacer, because
+      // attaching it to empty `<div>/<span>` nodes will end up having it erased by
+      // most browsers. (2018/04/27)
+
+
+      if (startVoid) {
+        attach = contents.querySelector('[data-slate-spacer]');
+      } // Remove any zero-width space spans from the cloned DOM so that they don't
+      // show up elsewhere when pasted.
+
+
+      Array.from(contents.querySelectorAll('[data-slate-zero-width]')).forEach(function (zw) {
+        var isNewline = zw.getAttribute('data-slate-zero-width') === 'n';
+        zw.textContent = isNewline ? '\n' : '';
+      }); // Set a `data-slate-fragment` attribute on a non-empty node, so it shows up
+      // in the HTML, and can be used for intra-Slate pasting. If it's a text
+      // node, wrap it in a `<span>` so we have something to set an attribute on.
+
+      if (isDOMText(attach)) {
+        var span = document.createElement('span'); // COMPAT: In Chrome and Safari, if we don't add the `white-space` style
+        // then leading and trailing spaces will be ignored. (2017/09/21)
+
+        span.style.whiteSpace = 'pre';
+        span.appendChild(attach);
+        contents.appendChild(span);
+        attach = span;
+      }
+
+      var fragment = slate.Node.fragment(value, selection);
+      var string = JSON.stringify(fragment);
+      var encoded = window.btoa(encodeURIComponent(string));
+      attach.setAttribute('data-slate-fragment', encoded);
+      dataTransfer.setData('application/x-slate-fragment', encoded); // Add the content to a <div> so that we can get its inner HTML.
+
+      var div = document.createElement('div');
+      div.appendChild(contents);
+      dataTransfer.setData('text/html', div.innerHTML);
+      dataTransfer.setData('text/plain', getPlainText(div));
+    };
+  })(Utils || (Utils = {}));
+  /**
+   * Get a plaintext representation of the content of a node, accounting for block
+   * elements which get a newline appended.
+   */
+
+
+  var getPlainText = function getPlainText(domNode) {
+    var text = '';
+
+    if (isDOMText(domNode) && domNode.nodeValue) {
+      return domNode.nodeValue;
+    }
+
+    if (isDOMElement(domNode)) {
+      for (var _i = 0, _Array$from = Array.from(domNode.childNodes); _i < _Array$from.length; _i++) {
+        var childNode = _Array$from[_i];
+        text += getPlainText(childNode);
+      }
+
+      var display = getComputedStyle(domNode).getPropertyValue('display');
+
+      if (display === 'block' || display === 'list' || domNode.tagName === 'BR') {
+        text += '\n';
+      }
+    }
+
+    return text;
+  };
+
+  /**
+   * Two weak maps that allow us rebuild a path given a node. They are populated
+   * at render time such that after a render occurs we can always backtrack.
+   */
+  var NODE_TO_INDEX = new WeakMap();
+  var NODE_TO_PARENT = new WeakMap();
+  /**
+   * Weak maps that allow us to go between Slate nodes and DOM nodes. These
+   * are used to resolve DOM event-related logic into Slate actions.
+   */
+
+  var EDITOR_TO_ELEMENT = new WeakMap();
+  var NODE_TO_ELEMENT = new WeakMap();
+  var ELEMENT_TO_NODE = new WeakMap();
+  var NODE_TO_KEY = new WeakMap();
+  var KEY_TO_ELEMENT = new WeakMap();
+  /**
+   * Weak maps for storing editor-related state.
+   */
+
+  var IS_READ_ONLY = new WeakMap();
+  var IS_FOCUSED = new WeakMap();
+  var PLACEHOLDER = new WeakMap();
+  /**
+   * Symbols.
+   */
+
+  var PLACEHOLDER_SYMBOL = Symbol('placeholder');
+
   var direction_1 = direction;
 
   var RTL = '\u0591-\u07FF\uFB1D-\uFDFD\uFE70-\uFEFC';
@@ -336,25 +1050,6 @@
 
     return 'neutral'
   }
-
-  /**
-   * A React context for sharing the `ReactEditor` class.
-   */
-
-  var EditorContext = React.createContext(undefined);
-  /**
-   * Get the current `ReactEditor` class that the component lives under.
-   */
-
-  var useEditor = function useEditor() {
-    var editor = React.useContext(EditorContext);
-
-    if (!editor) {
-      throw new Error("The `useEditor` hook must be used inside the <Editor> context.");
-    }
-
-    return editor;
-  };
 
   const String$1 = (props) => {
       const { isLast, leaf, parent, text } = props;
@@ -455,35 +1150,6 @@
               } }, placeholder),
           children));
   };
-
-  /**
-   * Two weak maps that allow us rebuild a path given a node. They are populated
-   * at render time such that after a render occurs we can always backtrack.
-   */
-  var NODE_TO_INDEX = new WeakMap();
-  var NODE_TO_PARENT = new WeakMap();
-  /**
-   * Weak maps that allow us to go between Slate nodes and DOM nodes. These
-   * are used to resolve DOM event-related logic into Slate actions.
-   */
-
-  var EDITOR_TO_ELEMENT = new WeakMap();
-  var NODE_TO_ELEMENT = new WeakMap();
-  var ELEMENT_TO_NODE = new WeakMap();
-  var NODE_TO_KEY = new WeakMap();
-  var KEY_TO_ELEMENT = new WeakMap();
-  /**
-   * Weak maps for storing editor-related state.
-   */
-
-  var IS_READ_ONLY = new WeakMap();
-  var IS_FOCUSED = new WeakMap();
-  var PLACEHOLDER = new WeakMap();
-  /**
-   * Symbols.
-   */
-
-  var PLACEHOLDER_SYMBOL = Symbol('placeholder');
 
   function _arrayWithoutHoles(arr) {
     if (Array.isArray(arr)) {
@@ -858,19 +1524,6 @@
   });
 
   /**
-   * A React context for sharing the `readOnly` state of the editor.
-   */
-
-  var ReadOnlyContext = React.createContext(false);
-  /**
-   * Get the current `readOnly` state of the editor.
-   */
-
-  var useReadOnly = function useReadOnly() {
-    return React.useContext(ReadOnlyContext);
-  };
-
-  /**
    * A React context for sharing the `selected` state of an element.
    */
 
@@ -999,306 +1652,6 @@
           NODE_TO_PARENT.set(n, node);
       }
       return React__default.createElement(React__default.Fragment, null, children);
-  };
-
-  /**
-   * A React context for sharing the `focused` state of the editor.
-   */
-
-  var FocusedContext = React.createContext(false);
-  /**
-   * Get the current `focused` state of the editor.
-   */
-
-  var useFocused = function useFocused() {
-    return React.useContext(FocusedContext);
-  };
-
-  var IS_IOS = typeof navigator !== 'undefined' && typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  var IS_APPLE = typeof navigator !== 'undefined' && /Mac OS X/.test(navigator.userAgent);
-  var IS_FIREFOX = typeof navigator !== 'undefined' && /^(?!.*Seamonkey)(?=.*Firefox).*/i.test(navigator.userAgent);
-  var IS_SAFARI = typeof navigator !== 'undefined' && /Version\/[\d\.]+.*Safari/.test(navigator.userAgent);
-
-  function _arrayWithHoles(arr) {
-    if (Array.isArray(arr)) return arr;
-  }
-
-  var arrayWithHoles = _arrayWithHoles;
-
-  function _iterableToArrayLimit(arr, i) {
-    if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) {
-      return;
-    }
-
-    var _arr = [];
-    var _n = true;
-    var _d = false;
-    var _e = undefined;
-
-    try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);
-
-        if (i && _arr.length === i) break;
-      }
-    } catch (err) {
-      _d = true;
-      _e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"] != null) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
-    }
-
-    return _arr;
-  }
-
-  var iterableToArrayLimit = _iterableToArrayLimit;
-
-  function _nonIterableRest() {
-    throw new TypeError("Invalid attempt to destructure non-iterable instance");
-  }
-
-  var nonIterableRest = _nonIterableRest;
-
-  function _slicedToArray(arr, i) {
-    return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || nonIterableRest();
-  }
-
-  var slicedToArray = _slicedToArray;
-
-  /**
-   * Types.
-   */
-
-  /**
-   * Check if a DOM node is a comment node.
-   */
-  var isDOMComment = function isDOMComment(value) {
-    return isDOMNode(value) && value.nodeType === 8;
-  };
-  /**
-   * Check if a DOM node is an element node.
-   */
-
-  var isDOMElement = function isDOMElement(value) {
-    return isDOMNode(value) && value.nodeType === 1;
-  };
-  /**
-   * Check if a value is a DOM node.
-   */
-
-  var isDOMNode = function isDOMNode(value) {
-    return value instanceof Node;
-  };
-  /**
-   * Check if a DOM node is an element node.
-   */
-
-  var isDOMText = function isDOMText(value) {
-    return isDOMNode(value) && value.nodeType === 3;
-  };
-  /**
-   * Normalize a DOM point so that it always refers to a text node.
-   */
-
-  var normalizeDOMPoint = function normalizeDOMPoint(domPoint) {
-    var _domPoint = slicedToArray(domPoint, 2),
-        node = _domPoint[0],
-        offset = _domPoint[1]; // If it's an element node, its offset refers to the index of its children
-    // including comment nodes, so try to find the right text child node.
-
-
-    if (isDOMElement(node) && node.childNodes.length) {
-      var isLast = offset === node.childNodes.length;
-      var direction = isLast ? 'backward' : 'forward';
-      var index = isLast ? offset - 1 : offset;
-      node = getEditableChild(node, index, direction); // If the node has children, traverse until we have a leaf node. Leaf nodes
-      // can be either text nodes, or other void DOM nodes.
-
-      while (isDOMElement(node) && node.childNodes.length) {
-        var i = isLast ? node.childNodes.length - 1 : 0;
-        node = getEditableChild(node, i, direction);
-      } // Determine the new offset inside the text node.
-
-
-      offset = isLast && node.textContent != null ? node.textContent.length : 0;
-    } // Return the node and offset.
-
-
-    return [node, offset];
-  };
-  /**
-   * Get the nearest editable child at `index` in a `parent`, preferring
-   * `direction`.
-   */
-
-  var getEditableChild = function getEditableChild(parent, index, direction) {
-    var childNodes = parent.childNodes;
-    var child = childNodes[index];
-    var i = index;
-    var triedForward = false;
-    var triedBackward = false; // While the child is a comment node, or an element node with no children,
-    // keep iterating to find a sibling non-void, non-comment node.
-
-    while (isDOMComment(child) || isDOMElement(child) && child.childNodes.length === 0 || isDOMElement(child) && child.getAttribute('contenteditable') === 'false') {
-      if (triedForward && triedBackward) {
-        break;
-      }
-
-      if (i >= childNodes.length) {
-        triedForward = true;
-        i = index - 1;
-        direction = 'backward';
-        continue;
-      }
-
-      if (i < 0) {
-        triedBackward = true;
-        i = index + 1;
-        direction = 'forward';
-        continue;
-      }
-
-      child = childNodes[i];
-      i += direction === 'forward' ? 1 : -1;
-    }
-
-    return child;
-  };
-
-  var Utils;
-
-  (function (Utils) {
-    /**
-     * Get the fragment data from a `DataTransfer` object.
-     */
-    Utils.getFragmentData = function (dataTransfer) {
-      var base64 = dataTransfer.getData('application/x-slate-fragment');
-
-      if (base64) {
-        var decoded = decodeURIComponent(window.atob(base64));
-        var fragment = JSON.parse(decoded);
-        return fragment;
-      }
-    };
-    /**
-     * Set the currently selected fragment to the clipboard.
-     */
-
-
-    Utils.setFragmentData = function (dataTransfer, editor) {
-      var value = editor.value;
-      var selection = value.selection;
-
-      if (!selection) {
-        return;
-      }
-
-      var _SlateRange$edges = slate.Range.edges(selection),
-          _SlateRange$edges2 = slicedToArray(_SlateRange$edges, 2),
-          start = _SlateRange$edges2[0],
-          end = _SlateRange$edges2[1];
-
-      var startVoid = editor.getMatch(start.path, 'void');
-      var endVoid = editor.getMatch(end.path, 'void');
-
-      if (slate.Range.isCollapsed(selection) && !startVoid) {
-        return;
-      } // Create a fake selection so that we can add a Base64-encoded copy of the
-      // fragment to the HTML, to decode on future pastes.
-
-
-      var domRange = editor.toDomRange(selection);
-      var contents = domRange.cloneContents();
-      var attach = contents.childNodes[0]; // Make sure attach is non-empty, since empty nodes will not get copied.
-
-      contents.childNodes.forEach(function (node) {
-        if (node.textContent && node.textContent.trim() !== '') {
-          attach = node;
-        }
-      }); // COMPAT: If the end node is a void node, we need to move the end of the
-      // range from the void node's spacer span, to the end of the void node's
-      // content, since the spacer is before void's content in the DOM.
-
-      if (endVoid) {
-        var _endVoid = slicedToArray(endVoid, 1),
-            voidNode = _endVoid[0];
-
-        var r = domRange.cloneRange();
-        var domNode = editor.toDomNode(voidNode);
-        r.setEndAfter(domNode);
-        contents = r.cloneContents();
-      } // COMPAT: If the start node is a void node, we need to attach the encoded
-      // fragment to the void node's content node instead of the spacer, because
-      // attaching it to empty `<div>/<span>` nodes will end up having it erased by
-      // most browsers. (2018/04/27)
-
-
-      if (startVoid) {
-        attach = contents.querySelector('[data-slate-spacer]');
-      } // Remove any zero-width space spans from the cloned DOM so that they don't
-      // show up elsewhere when pasted.
-
-
-      Array.from(contents.querySelectorAll('[data-slate-zero-width]')).forEach(function (zw) {
-        var isNewline = zw.getAttribute('data-slate-zero-width') === 'n';
-        zw.textContent = isNewline ? '\n' : '';
-      }); // Set a `data-slate-fragment` attribute on a non-empty node, so it shows up
-      // in the HTML, and can be used for intra-Slate pasting. If it's a text
-      // node, wrap it in a `<span>` so we have something to set an attribute on.
-
-      if (isDOMText(attach)) {
-        var span = document.createElement('span'); // COMPAT: In Chrome and Safari, if we don't add the `white-space` style
-        // then leading and trailing spaces will be ignored. (2017/09/21)
-
-        span.style.whiteSpace = 'pre';
-        span.appendChild(attach);
-        contents.appendChild(span);
-        attach = span;
-      }
-
-      var fragment = slate.Node.fragment(value, selection);
-      var string = JSON.stringify(fragment);
-      var encoded = window.btoa(encodeURIComponent(string));
-      attach.setAttribute('data-slate-fragment', encoded);
-      dataTransfer.setData('application/x-slate-fragment', encoded); // Add the content to a <div> so that we can get its inner HTML.
-
-      var div = document.createElement('div');
-      div.appendChild(contents);
-      dataTransfer.setData('text/html', div.innerHTML);
-      dataTransfer.setData('text/plain', getPlainText(div));
-    };
-  })(Utils || (Utils = {}));
-  /**
-   * Get a plaintext representation of the content of a node, accounting for block
-   * elements which get a newline appended.
-   */
-
-
-  var getPlainText = function getPlainText(domNode) {
-    var text = '';
-
-    if (isDOMText(domNode) && domNode.nodeValue) {
-      return domNode.nodeValue;
-    }
-
-    if (isDOMElement(domNode)) {
-      for (var _i = 0, _Array$from = Array.from(domNode.childNodes); _i < _Array$from.length; _i++) {
-        var childNode = _Array$from[_i];
-        text += getPlainText(childNode);
-      }
-
-      var display = getComputedStyle(domNode).getPropertyValue('display');
-
-      if (display === 'block' || display === 'list' || domNode.tagName === 'BR') {
-        text += '\n';
-      }
-    }
-
-    return text;
   };
 
   /**
@@ -1471,6 +1824,7 @@
                           if (!readOnly &&
                               !state.isUpdatingSelection &&
                               hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onBlur) &&
                               // COMPAT: If the current `activeElement` is still the previous
                               // one, this is due to the window being blurred when the tab
                               // itself becomes unfocused, so we want to abort early to allow to
@@ -1507,6 +1861,7 @@
                       }, []), onClick: React.useCallback((event) => {
                           if (!readOnly &&
                               hasTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onClick) &&
                               isDOMNode(event.target)) {
                               const node = editor.toSlateNode(event.target);
                               const path = editor.findPath(node);
@@ -1516,7 +1871,8 @@
                               }
                           }
                       }, []), onCompositionEnd: React.useCallback((event) => {
-                          if (hasEditableTarget(editor, event.target)) {
+                          if (hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onCompositionEnd)) {
                               state.isComposing = false;
                               // COMPAT: In Chrome, `beforeinput` events for compositions
                               // aren't correct and never fire the "insertFromComposition"
@@ -1527,16 +1883,20 @@
                               }
                           }
                       }, []), onCompositionStart: React.useCallback((event) => {
-                          if (hasEditableTarget(editor, event.target)) {
+                          if (hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onCompositionStart)) {
                               state.isComposing = true;
                           }
                       }, []), onCopy: React.useCallback((event) => {
-                          if (hasEditableTarget(editor, event.target)) {
+                          if (hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onCopy)) {
                               event.preventDefault();
                               Utils.setFragmentData(event.clipboardData, editor);
                           }
                       }, []), onCut: React.useCallback((event) => {
-                          if (!readOnly && hasEditableTarget(editor, event.target)) {
+                          if (!readOnly &&
+                              hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onCut)) {
                               event.preventDefault();
                               Utils.setFragmentData(event.clipboardData, editor);
                               const { selection } = value;
@@ -1545,7 +1905,8 @@
                               }
                           }
                       }, []), onDragOver: React.useCallback((event) => {
-                          if (hasTarget(editor, event.target)) {
+                          if (hasTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onDragOver)) {
                               // Only when the target is void, call `preventDefault` to signal
                               // that drops are allowed. Editable content is droppable by
                               // default, and calling `preventDefault` hides the cursor.
@@ -1555,7 +1916,8 @@
                               }
                           }
                       }, []), onDragStart: React.useCallback((event) => {
-                          if (hasTarget(editor, event.target)) {
+                          if (hasTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onDragStart)) {
                               const node = editor.toSlateNode(event.target);
                               const path = editor.findPath(node);
                               const voidMatch = editor.getMatch(path, 'void');
@@ -1570,7 +1932,8 @@
                       }, []), onFocus: React.useCallback((event) => {
                           if (!readOnly &&
                               !state.isUpdatingSelection &&
-                              hasEditableTarget(editor, event.target)) {
+                              hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onFocus)) {
                               const el = editor.toDomNode(value);
                               state.latestElement = window.document.activeElement;
                               // COMPAT: If the editor has nested editable elements, the focus
@@ -1583,15 +1946,90 @@
                               IS_FOCUSED.set(editor, true);
                           }
                       }, []), onKeyDown: event => {
-                          if (!readOnly && hasEditableTarget(editor, event.target)) {
-                              editor.onKeyDown(event.nativeEvent);
+                          if (!readOnly &&
+                              hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onKeyDown)) {
+                              const { nativeEvent } = event;
+                              // COMPAT: Since we prevent the default behavior on `beforeinput` events,
+                              // the browser doesn't think there's ever any history stack to undo or redo,
+                              // so we have to manage these hotkeys ourselves. (2019/11/06)
+                              if (Hotkeys.isRedo(nativeEvent)) {
+                                  editor.redo();
+                                  return;
+                              }
+                              if (Hotkeys.isUndo(nativeEvent)) {
+                                  editor.undo();
+                                  return;
+                              }
+                              // COMPAT: Certain browsers don't handle the selection updates
+                              // properly. In Chrome, the selection isn't properly extended.
+                              // And in Firefox, the selection isn't properly collapsed.
+                              // (2017/10/17)
+                              if (Hotkeys.isMoveLineBackward(nativeEvent)) {
+                                  event.preventDefault();
+                                  editor.move({ unit: 'line', reverse: true });
+                                  return;
+                              }
+                              if (Hotkeys.isMoveLineForward(nativeEvent)) {
+                                  event.preventDefault();
+                                  editor.move({ unit: 'line' });
+                                  return;
+                              }
+                              if (Hotkeys.isExtendLineBackward(nativeEvent)) {
+                                  event.preventDefault();
+                                  editor.move({ unit: 'line', edge: 'focus', reverse: true });
+                                  return;
+                              }
+                              if (Hotkeys.isExtendLineForward(nativeEvent)) {
+                                  event.preventDefault();
+                                  editor.move({ unit: 'line', edge: 'focus' });
+                                  return;
+                              }
+                              // COMPAT: If a void node is selected, or a zero-width text node
+                              // adjacent to an inline is selected, we need to handle these
+                              // hotkeys manually because browsers won't be able to skip over
+                              // the void node with the zero-width space not being an empty
+                              // string.
+                              if (Hotkeys.isMoveBackward(nativeEvent)) {
+                                  const { selection } = editor.value;
+                                  event.preventDefault();
+                                  if (selection && slate.Range.isCollapsed(selection)) {
+                                      editor.move({ reverse: true });
+                                  }
+                                  else {
+                                      editor.collapse({ edge: 'start' });
+                                  }
+                                  return;
+                              }
+                              if (Hotkeys.isMoveForward(nativeEvent)) {
+                                  const { selection } = editor.value;
+                                  event.preventDefault();
+                                  if (selection && slate.Range.isCollapsed(selection)) {
+                                      editor.move();
+                                  }
+                                  else {
+                                      editor.collapse({ edge: 'end' });
+                                  }
+                                  return;
+                              }
+                              if (Hotkeys.isMoveWordBackward(nativeEvent)) {
+                                  event.preventDefault();
+                                  editor.move({ unit: 'word', reverse: true });
+                                  return;
+                              }
+                              if (Hotkeys.isMoveWordForward(nativeEvent)) {
+                                  event.preventDefault();
+                                  editor.move({ unit: 'word' });
+                                  return;
+                              }
                           }
                       }, onPaste: React.useCallback((event) => {
                           // COMPAT: Firefox doesn't support the `beforeinput` event, so we
                           // fall back to React's `onPaste` here instead.
                           if (IS_FIREFOX &&
                               !readOnly &&
-                              hasEditableTarget(editor, event.target)) {
+                              hasEditableTarget(editor, event.target) &&
+                              !isEventHandled(event, attributes.onPaste)) {
                               event.preventDefault();
                               editor.handleInput('insertFromPaste', event.clipboardData);
                           }
@@ -1626,6 +2064,16 @@
    */
   const hasEditableTarget = (editor, target) => {
       return isDOMNode(target) && editor.hasDomNode(target, { editable: true });
+  };
+  /**
+   * Check if an event is overrided by a handler.
+   */
+  const isEventHandled = (event, handler) => {
+      if (!handler) {
+          return false;
+      }
+      handler(event);
+      return event.isDefaultPrevented() || event.isPropagationStopped();
   };
 
   /**
@@ -1664,14 +2112,6 @@
   }
 
   var createClass = _createClass;
-
-  function unwrapExports (x) {
-  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-  }
-
-  function createCommonjsModule(fn, module) {
-  	return module = { exports: {} }, fn(module, module.exports), module.exports;
-  }
 
   var _typeof_1 = createCommonjsModule(function (module) {
   function _typeof2(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof2 = function _typeof2(obj) { return typeof obj; }; } else { _typeof2 = function _typeof2(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof2(obj); }
@@ -1788,351 +2228,6 @@
   }
 
   var inherits = _inherits;
-
-  var lib = createCommonjsModule(function (module, exports) {
-
-  Object.defineProperty(exports, "__esModule", {
-    value: true
-  });
-
-  /**
-   * Constants.
-   */
-
-  var IS_MAC = typeof window != 'undefined' && /Mac|iPod|iPhone|iPad/.test(window.navigator.platform);
-
-  var MODIFIERS = {
-    alt: 'altKey',
-    control: 'ctrlKey',
-    meta: 'metaKey',
-    shift: 'shiftKey'
-  };
-
-  var ALIASES = {
-    add: '+',
-    break: 'pause',
-    cmd: 'meta',
-    command: 'meta',
-    ctl: 'control',
-    ctrl: 'control',
-    del: 'delete',
-    down: 'arrowdown',
-    esc: 'escape',
-    ins: 'insert',
-    left: 'arrowleft',
-    mod: IS_MAC ? 'meta' : 'control',
-    opt: 'alt',
-    option: 'alt',
-    return: 'enter',
-    right: 'arrowright',
-    space: ' ',
-    spacebar: ' ',
-    up: 'arrowup',
-    win: 'meta',
-    windows: 'meta'
-  };
-
-  var CODES = {
-    backspace: 8,
-    tab: 9,
-    enter: 13,
-    shift: 16,
-    control: 17,
-    alt: 18,
-    pause: 19,
-    capslock: 20,
-    escape: 27,
-    ' ': 32,
-    pageup: 33,
-    pagedown: 34,
-    end: 35,
-    home: 36,
-    arrowleft: 37,
-    arrowup: 38,
-    arrowright: 39,
-    arrowdown: 40,
-    insert: 45,
-    delete: 46,
-    meta: 91,
-    numlock: 144,
-    scrolllock: 145,
-    ';': 186,
-    '=': 187,
-    ',': 188,
-    '-': 189,
-    '.': 190,
-    '/': 191,
-    '`': 192,
-    '[': 219,
-    '\\': 220,
-    ']': 221,
-    '\'': 222
-  };
-
-  for (var f = 1; f < 20; f++) {
-    CODES['f' + f] = 111 + f;
-  }
-
-  /**
-   * Is hotkey?
-   */
-
-  function isHotkey(hotkey, options, event) {
-    if (options && !('byKey' in options)) {
-      event = options;
-      options = null;
-    }
-
-    if (!Array.isArray(hotkey)) {
-      hotkey = [hotkey];
-    }
-
-    var array = hotkey.map(function (string) {
-      return parseHotkey(string, options);
-    });
-    var check = function check(e) {
-      return array.some(function (object) {
-        return compareHotkey(object, e);
-      });
-    };
-    var ret = event == null ? check : check(event);
-    return ret;
-  }
-
-  function isCodeHotkey(hotkey, event) {
-    return isHotkey(hotkey, event);
-  }
-
-  function isKeyHotkey(hotkey, event) {
-    return isHotkey(hotkey, { byKey: true }, event);
-  }
-
-  /**
-   * Parse.
-   */
-
-  function parseHotkey(hotkey, options) {
-    var byKey = options && options.byKey;
-    var ret = {};
-
-    // Special case to handle the `+` key since we use it as a separator.
-    hotkey = hotkey.replace('++', '+add');
-    var values = hotkey.split('+');
-    var length = values.length;
-
-    // Ensure that all the modifiers are set to false unless the hotkey has them.
-
-    for (var k in MODIFIERS) {
-      ret[MODIFIERS[k]] = false;
-    }
-
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = values[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var value = _step.value;
-
-        var optional = value.endsWith('?');
-
-        if (optional) {
-          value = value.slice(0, -1);
-        }
-
-        var name = toKeyName(value);
-        var modifier = MODIFIERS[name];
-
-        if (length === 1 || !modifier) {
-          if (byKey) {
-            ret.key = name;
-          } else {
-            ret.which = toKeyCode(value);
-          }
-        }
-
-        if (modifier) {
-          ret[modifier] = optional ? null : true;
-        }
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator.return) {
-          _iterator.return();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-
-    return ret;
-  }
-
-  /**
-   * Compare.
-   */
-
-  function compareHotkey(object, event) {
-    for (var key in object) {
-      var expected = object[key];
-      var actual = void 0;
-
-      if (expected == null) {
-        continue;
-      }
-
-      if (key === 'key') {
-        actual = event.key.toLowerCase();
-      } else if (key === 'which') {
-        actual = expected === 91 && event.which === 93 ? 91 : event.which;
-      } else {
-        actual = event[key];
-      }
-
-      if (actual == null && expected === false) {
-        continue;
-      }
-
-      if (actual !== expected) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Utils.
-   */
-
-  function toKeyCode(name) {
-    name = toKeyName(name);
-    var code = CODES[name] || name.toUpperCase().charCodeAt(0);
-    return code;
-  }
-
-  function toKeyName(name) {
-    name = name.toLowerCase();
-    name = ALIASES[name] || name;
-    return name;
-  }
-
-  /**
-   * Export.
-   */
-
-  exports.default = isHotkey;
-  exports.isHotkey = isHotkey;
-  exports.isCodeHotkey = isCodeHotkey;
-  exports.isKeyHotkey = isKeyHotkey;
-  exports.parseHotkey = parseHotkey;
-  exports.compareHotkey = compareHotkey;
-  exports.toKeyCode = toKeyCode;
-  exports.toKeyName = toKeyName;
-  });
-
-  unwrapExports(lib);
-  var lib_1 = lib.isHotkey;
-  var lib_2 = lib.isCodeHotkey;
-  var lib_3 = lib.isKeyHotkey;
-  var lib_4 = lib.parseHotkey;
-  var lib_5 = lib.compareHotkey;
-  var lib_6 = lib.toKeyCode;
-  var lib_7 = lib.toKeyName;
-
-  /**
-   * Hotkey mappings for each platform.
-   */
-
-  var HOTKEYS = {
-    bold: 'mod+b',
-    compose: ['down', 'left', 'right', 'up', 'backspace', 'enter'],
-    moveBackward: 'left',
-    moveForward: 'right',
-    moveWordBackward: 'ctrl+left',
-    moveWordForward: 'ctrl+right',
-    deleteBackward: 'shift?+backspace',
-    deleteForward: 'shift?+delete',
-    extendBackward: 'shift+left',
-    extendForward: 'shift+right',
-    italic: 'mod+i',
-    splitBlock: 'shift?+enter',
-    undo: 'mod+z'
-  };
-  var APPLE_HOTKEYS = {
-    moveLineBackward: 'opt+up',
-    moveLineForward: 'opt+down',
-    moveWordBackward: 'opt+left',
-    moveWordForward: 'opt+right',
-    deleteBackward: ['ctrl+backspace', 'ctrl+h'],
-    deleteForward: ['ctrl+delete', 'ctrl+d'],
-    deleteLineBackward: 'cmd+shift?+backspace',
-    deleteLineForward: ['cmd+shift?+delete', 'ctrl+k'],
-    deleteWordBackward: 'opt+shift?+backspace',
-    deleteWordForward: 'opt+shift?+delete',
-    extendLineBackward: 'opt+shift+up',
-    extendLineForward: 'opt+shift+down',
-    redo: 'cmd+shift+z',
-    transposeCharacter: 'ctrl+t'
-  };
-  var WINDOWS_HOTKEYS = {
-    deleteWordBackward: 'ctrl+shift?+backspace',
-    deleteWordForward: 'ctrl+shift?+delete',
-    redo: ['ctrl+y', 'ctrl+shift+z']
-  };
-  /**
-   * Create a platform-aware hotkey checker.
-   */
-
-  var create = function create(key) {
-    var generic = HOTKEYS[key];
-    var apple = APPLE_HOTKEYS[key];
-    var windows = WINDOWS_HOTKEYS[key];
-    var isGeneric = generic && lib_3(generic);
-    var isApple = apple && lib_3(apple);
-    var isWindows = windows && lib_3(windows);
-    return function (event) {
-      if (isGeneric && isGeneric(event)) return true;
-      if (IS_APPLE && isApple && isApple(event)) return true;
-      if (!IS_APPLE && isWindows && isWindows(event)) return true;
-      return false;
-    };
-  };
-  /**
-   * Hotkeys.
-   */
-
-
-  var Hotkeys = {
-    isBold: create('bold'),
-    isCompose: create('compose'),
-    isMoveBackward: create('moveBackward'),
-    isMoveForward: create('moveForward'),
-    isDeleteBackward: create('deleteBackward'),
-    isDeleteForward: create('deleteForward'),
-    isDeleteLineBackward: create('deleteLineBackward'),
-    isDeleteLineForward: create('deleteLineForward'),
-    isDeleteWordBackward: create('deleteWordBackward'),
-    isDeleteWordForward: create('deleteWordForward'),
-    isExtendBackward: create('extendBackward'),
-    isExtendForward: create('extendForward'),
-    isExtendLineBackward: create('extendLineBackward'),
-    isExtendLineForward: create('extendLineForward'),
-    isItalic: create('italic'),
-    isMoveLineBackward: create('moveLineBackward'),
-    isMoveLineForward: create('moveLineForward'),
-    isMoveWordBackward: create('moveWordBackward'),
-    isMoveWordForward: create('moveWordForward'),
-    isRedo: create('redo'),
-    isSplitBlock: create('splitBlock'),
-    isTransposeCharacter: create('transposeCharacter'),
-    isUndo: create('undo')
-  };
 
   /**
    * An auto-incrementing identifier for keys.
@@ -2562,241 +2657,6 @@
                   }
                 }
               }
-            }
-          }
-          /**
-           * Transform an `InputEvent` into commands on the editor.
-           */
-
-        }, {
-          key: "onBeforeInput",
-          value: function onBeforeInput(event) {
-            var inputType = event.inputType,
-                data = event.data,
-                dataTransfer = event.dataTransfer; // Each of these input types reflects specific user intent, and most of them
-            // are cancellable so we can perform the action on the Slate model direclty.
-            // https://w3c.github.io/input-events/#dom-inputevent-inputtype
-
-            switch (inputType) {
-              case 'deleteByComposition':
-              case 'deleteByCut':
-              case 'deleteByDrag':
-              case 'deleteContent':
-              case 'deleteContentForward':
-                {
-                  this["delete"]();
-                  break;
-                }
-
-              case 'deleteContentBackward':
-                {
-                  this["delete"]({
-                    reverse: true
-                  });
-                  break;
-                }
-
-              case 'deleteEntireSoftLine':
-                {
-                  this["delete"]({
-                    unit: 'line',
-                    reverse: true
-                  });
-                  this["delete"]({
-                    unit: 'line'
-                  });
-                  break;
-                }
-
-              case 'deleteSoftLineBackward':
-              case 'deleteHardLineBackward':
-                {
-                  this["delete"]({
-                    unit: 'line',
-                    reverse: true
-                  });
-                  break;
-                }
-
-              case 'deleteSoftLineForward':
-              case 'deleteHardLineForward':
-                {
-                  this["delete"]({
-                    unit: 'line'
-                  });
-                  break;
-                }
-
-              case 'deleteWordBackward':
-                {
-                  this["delete"]({
-                    unit: 'word',
-                    reverse: true
-                  });
-                  break;
-                }
-
-              case 'deleteWordForward':
-                {
-                  this["delete"]({
-                    unit: 'word'
-                  });
-                  break;
-                }
-
-              case 'historyRedo':
-                {
-                  this.redo();
-                  break;
-                }
-
-              case 'historyUndo':
-                {
-                  this.undo();
-                  break;
-                }
-
-              case 'insertLineBreak':
-              case 'insertParagraph':
-                {
-                  this.splitNodes({
-                    always: true
-                  });
-                  break;
-                }
-
-              case 'insertFromComposition':
-              case 'insertFromDrop':
-              case 'insertFromPaste':
-              case 'insertFromYank':
-              case 'insertReplacementText':
-              case 'insertText':
-                {
-                  if (dataTransfer != null) {
-                    this.insertData(dataTransfer);
-                  } else if (data != null) {
-                    this.insertText(data);
-                  }
-
-                  break;
-                }
-            }
-          }
-          /**
-           * Transform a `KeyboardEvent` into commands on the editor. This should only
-           * be used for hotkeys which attach specific commands to specific key
-           * combinations. Most input logic will be handled by the `onBeforeInput`
-           * method instead.
-           */
-
-        }, {
-          key: "onKeyDown",
-          value: function onKeyDown(event) {
-            // COMPAT: Since we prevent the default behavior on `beforeinput` events,
-            // the browser doesn't think there's ever any history stack to undo or redo,
-            // so we have to manage these hotkeys ourselves. (2019/11/06)
-            if (Hotkeys.isRedo(event)) {
-              this.redo();
-              return;
-            }
-
-            if (Hotkeys.isUndo(event)) {
-              this.undo();
-              return;
-            } // COMPAT: Certain browsers don't handle the selection updates
-            // properly. In Chrome, the selection isn't properly extended.
-            // And in Firefox, the selection isn't properly collapsed.
-            // (2017/10/17)
-
-
-            if (Hotkeys.isMoveLineBackward(event)) {
-              event.preventDefault();
-              this.move({
-                unit: 'line',
-                reverse: true
-              });
-              return;
-            }
-
-            if (Hotkeys.isMoveLineForward(event)) {
-              event.preventDefault();
-              this.move({
-                unit: 'line'
-              });
-              return;
-            }
-
-            if (Hotkeys.isExtendLineBackward(event)) {
-              event.preventDefault();
-              this.move({
-                unit: 'line',
-                edge: 'focus',
-                reverse: true
-              });
-              return;
-            }
-
-            if (Hotkeys.isExtendLineForward(event)) {
-              event.preventDefault();
-              this.move({
-                unit: 'line',
-                edge: 'focus'
-              });
-              return;
-            } // COMPAT: If a void node is selected, or a zero-width text node
-            // adjacent to an inline is selected, we need to handle these
-            // hotkeys manually because browsers won't be able to skip over
-            // the void node with the zero-width space not being an empty
-            // string.
-
-
-            if (Hotkeys.isMoveBackward(event)) {
-              var selection = this.value.selection;
-              event.preventDefault();
-
-              if (selection && slate.Range.isCollapsed(selection)) {
-                this.move({
-                  reverse: true
-                });
-              } else {
-                this.collapse({
-                  edge: 'start'
-                });
-              }
-
-              return;
-            }
-
-            if (Hotkeys.isMoveForward(event)) {
-              var _selection = this.value.selection;
-              event.preventDefault();
-
-              if (_selection && slate.Range.isCollapsed(_selection)) {
-                this.move();
-              } else {
-                this.collapse({
-                  edge: 'end'
-                });
-              }
-
-              return;
-            }
-
-            if (Hotkeys.isMoveWordBackward(event)) {
-              event.preventDefault();
-              this.move({
-                unit: 'word',
-                reverse: true
-              });
-              return;
-            }
-
-            if (Hotkeys.isMoveWordForward(event)) {
-              event.preventDefault();
-              this.move({
-                unit: 'word'
-              });
-              return;
             }
           }
           /**

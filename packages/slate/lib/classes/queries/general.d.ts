@@ -1,4 +1,4 @@
-import { Editor, Path, Point, PathRef, PointRef, Range, RangeRef } from '../..';
+import { Editor, Path, PathRef, Point, PointRef, Range, RangeRef } from '../..';
 declare class GeneralQueries {
     /**
      * Create a mutable ref for a `Path` object, which will stay in sync as new

@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import { Value, Element, NodeEntry, Range as SlateRange, Operation } from 'slate';
+import { Element, NodeEntry, Operation, Range as SlateRange, Value } from 'slate';
 import { CustomAnnotationProps, CustomDecorationProps, CustomElementProps, CustomMarkProps } from './custom';
 /**
  * Editor.
@@ -19,14 +19,6 @@ declare const Editor: (props: {
         focus(): void;
         deselect(): void;
         insertData(dataTransfer: DataTransfer): void;
-        onBeforeInput(event: Event & {
-            data: string | null;
-            dataTransfer: DataTransfer | null;
-            getTargetRanges(): StaticRange[];
-            inputType: string;
-            isComposing: boolean;
-        }): void;
-        onKeyDown(event: KeyboardEvent): void;
         redo(): void;
         undo(): void;
         hasDomNode(target: Node, options?: {
@@ -77,9 +69,6 @@ declare const Editor: (props: {
             hanging?: boolean | undefined;
         } | undefined): void;
         moveNodes(this: import("slate").Editor, options: {
-            /**
-             * Editor.
-             */
             at?: SlateRange | import("slate/lib/interfaces/path").Path | import("slate/lib/interfaces/point").Point | undefined;
             match?: "value" | Partial<Value> | Partial<Element> | Partial<import("slate/lib/interfaces/text").Text> | "text" | "block" | "element" | "inline" | "inline-element" | "void" | ((entry: NodeEntry) => boolean) | undefined;
             to: import("slate/lib/interfaces/path").Path;

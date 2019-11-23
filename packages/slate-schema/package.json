@@ -5,7 +5,7 @@
     "access": "public"
   },
   "description": "A mixin for ensuring your Slate content conforms to a set of rules.",
-  "version": "0.50.5",
+  "version": "0.50.6",
   "license": "MIT",
   "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",
@@ -19,7 +19,7 @@
   ],
   "devDependencies": {
     "@pbackup/slate": "^0.47.8",
-    "@pbackup/slate-hyperscript": "^0.13.13"
+    "@pbackup/slate-hyperscript": "^0.13.14"
   },
   "peerDependencies": {
     "@pbackup/slate": ">=0.50.0"

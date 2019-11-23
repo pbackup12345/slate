@@ -5,7 +5,7 @@
     "access": "public"
   },
   "description": "A hyperscript helper for creating Slate documents.",
-  "version": "0.13.13",
+  "version": "0.13.14",
   "license": "MIT",
   "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",

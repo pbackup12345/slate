@@ -5,7 +5,7 @@
     "access": "public"
   },
   "description": "An operation-based history implementation for Slate editors.",
-  "version": "0.50.5",
+  "version": "0.50.6",
   "license": "MIT",
   "repository": "git://github.com/pbackup12345/slate.git",
   "main": "lib/index.js",
@@ -22,8 +22,8 @@
     "is-plain-object": "^2.0.4"
   },
   "devDependencies": {
-    "@pbackup/slate": "^0.50.5",
-    "@pbackup/slate-hyperscript": "^0.13.13"
+    "@pbackup/slate": "^0.50.6",
+    "@pbackup/slate-hyperscript": "^0.13.14"
   },
   "peerDependencies": {
     "@pbackup/slate": ">=0.50.0"
